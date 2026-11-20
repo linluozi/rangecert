@@ -1,0 +1,9 @@
+{
+  "impl": "rangecert",
+  "scale": 2000,
+  "sample": 0,
+  "ms": 78.435016,
+  "output_sha256": "e78f4f6fd65a4d1b12d5879979bb998042e49e31aeccffbe8bb431938865a19a",
+  "added": 1979,
+  "removed": 2018
+}
