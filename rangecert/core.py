@@ -12,6 +12,7 @@ family per policy (IPv4 or IPv6).
 from __future__ import annotations
 
 import ipaddress
+import itertools
 import re
 from bisect import bisect_right
 from dataclasses import dataclass
@@ -154,12 +155,22 @@ def _overlaps(intervals: Sequence[Interval], start: int, end: int) -> bool:
     return _overlaps_idx(intervals, [i.start for i in intervals], start, end)
 
 
-def _labels_at(rules: Sequence[Rule], starts: Sequence[int], point: int) -> tuple[str, ...]:
-    """Labels of every rule covering ``point``, in file order."""
+def _labels_at(
+    rules: Sequence[Rule],
+    starts: Sequence[int],
+    max_ends: Sequence[int],
+    point: int,
+) -> tuple[str, ...]:
+    """Labels of every rule covering ``point``, in file order.
+
+    ``max_ends[k]`` is the largest end among rules 0..k. It lets us stop walking
+    left as soon as no earlier rule can possibly reach the point, which keeps
+    nested long rules (0.0.0.0/0 followed by /24s) correct.
+    """
     k = bisect_right(starts, point) - 1
     found: list[tuple[int, str]] = []
-    while k >= 0 and rules[k].end > point:
-        if rules[k].start <= point:
+    while k >= 0 and max_ends[k] > point:
+        if rules[k].start <= point < rules[k].end:
             found.append((rules[k].line_no, rules[k].label))
         k -= 1
     found.sort()
@@ -309,12 +320,14 @@ class Policy:
         old_i, new_i = self.intervals(), other.intervals()
         old_starts = [r.start for r in self.rules]
         new_starts = [r.start for r in other.rules]
+        old_max = list(itertools.accumulate((r.end for r in self.rules), max))
+        new_max = list(itertools.accumulate((r.end for r in other.rules), max))
         added = [
-            Change(i.start, i.end, i.family, _labels_at(other.rules, new_starts, i.start), i.start)
+            Change(i.start, i.end, i.family, _labels_at(other.rules, new_starts, new_max, i.start), i.start)
             for i in _difference(new_i, old_i)
         ]
         removed = [
-            Change(i.start, i.end, i.family, _labels_at(self.rules, old_starts, i.start), i.start)
+            Change(i.start, i.end, i.family, _labels_at(self.rules, old_starts, old_max, i.start), i.start)
             for i in _difference(old_i, new_i)
         ]
         result = Diff(self, other, added, removed)

@@ -245,3 +245,14 @@ class TestCli:
         result = self.run("diff", str(p), str(p))
         assert result.returncode == 2
         assert "mixed" in result.stderr
+
+
+class TestNestedLabels:
+    def test_long_earlier_rule_still_labels_a_nested_change(self):
+        # 0.0.0.0/0 starts first and ends last; a later /24 must not hide it.
+        old = Policy.parse("0.0.0.0/0  # all\n10.0.0.0/24  # vpc\n")
+        new = Policy.parse("10.0.0.0/24  # vpc\n")
+        removed = old.diff(new).removed
+        assert len(removed) == 2
+        labels = {c.labels for c in removed}
+        assert labels == {("all",)}

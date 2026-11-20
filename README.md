@@ -95,7 +95,8 @@ intervals `added = new \ old` and `removed = old \ new`. Before returning,
 5. change pieces are maximal, so the interval count is minimal for this diff.
 
 If any check fails, the call raises instead of printing a diff. A deliberately
-tampered certificate is rejected by the test suite.
+tampered certificate is rejected by the test suite, and a nested-rule test
+proves that a later `/24` does not hide an earlier `0.0.0.0/0` rule.
 
 ## Benchmark
 
@@ -107,11 +108,11 @@ verification**. 3 warmups, 5 timed samples, median reported; raw samples are in
 
 | intervals per side | baseline median | rangecert median | speedup |
 |---|---|---|---|
-| 100 | 1.280 ms | 3.494 ms | 0.37x |
-| 500 | 29.304 ms | 18.937 ms | 1.55x |
-| 2000 | 473.296 ms | 78.466 ms | 6.03x |
+| 100 | 1.275 ms | 3.589 ms | 0.36x |
+| 500 | 29.499 ms | 19.257 ms | 1.53x |
+| 2000 | 474.107 ms | 82.469 ms | 5.75x |
 
-Median speedup across the three scales: **1.55x**. The small case is honestly a
+Median speedup across the three scales: **1.53x**. The small case is honestly a
 regression: certificate verification is `O(changes · log n)` and dominates at
 n=100. The crossover is between 100 and 500 intervals. This is a design
 trade-off, not a hidden cost.
@@ -124,7 +125,7 @@ python bench/bench.py
 
 ```bash
 .venv/bin/python -m pytest -q tests
-# 23 passed in 0.71s
+# 24 passed in 0.75s
 ```
 
 - 2,500 randomized old/new policy pairs are compared against an independent

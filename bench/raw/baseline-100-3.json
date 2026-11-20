@@ -2,7 +2,7 @@
   "impl": "baseline",
   "scale": 100,
   "sample": 3,
-  "ms": 1.295619,
+  "ms": 1.27518,
   "output_sha256": "d6cdb1b069ab4336141d3491ba9ffb2d06f43ee6acb47fb6ff33bed41faa6669",
   "added": 95,
   "removed": 105
